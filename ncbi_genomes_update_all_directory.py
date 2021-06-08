@@ -31,8 +31,12 @@ download_directory = '/tmp/ncbi_genomes/'
 if not os.path.exists(download_directory):
   os.makedirs(download_directory)
 
-def rsync(src, trg):
-  subprocess.call(['rsync', '--copy-links', '--recursive', '--times', '--verbose', src, trg])
+def rsync(src, trg, params=[]):
+  call = ['rsync', '--copy-links', '--recursive', '--times', '--verbose'] 
+  call.extend(params)
+  call.extend([src, trg])
+  print("Running: " + " ".join(call), file=sys.stderr, flush=True)
+  subprocess.call(call)
 
 def localPath(ftp_url, local_prefix):
   return ftp_url.replace('ftp://ftp.ncbi.nlm.nih.gov/genomes/', local_prefix)
@@ -107,9 +111,7 @@ for f in assembly_summaries:
 rsync_list.close()
 
 # download new entries to download directory
-call = ['rsync', '--copy-links', '--recursive','--progress', '--times', '--verbose', '--include-from=' + download_directory + 'rsync.list', '--exclude=*', remote_prefix + 'all', download_directory]
-print(" ".join(call))
-subprocess.call(call)
+rsync(remote_prefix + 'all', download_directory, ['--include-from=' + download_directory + 'rsync.list', '--exclude=*'])
 
 # move/copy everything from downloaded all directory to local directory
 # rsync --copy-links --recursive --progress --times --verbose download_directory/all target_directory/all
